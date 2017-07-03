@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <title></title>
+  <style type="text/css">
+    body {
+      background: #c8c5eb;
+      font: 14px/20px, Arial, sans-serif;
+      padding: 40px 0;
+      color: white;
+    }
+
+    #container {
+      margin: 0 auto;
+      width: 90%;
+      background: #444753;
+      border: 5px solid;
+      border-radius: 5px;{}
+
+      #list_online {
+        width:560px;
+        float: left;
+      }
+
+      .search {
+        padding: 20px;
+      } 
+
+    }
+  </style>
+  <script type="text/javascript">
+  function loading(){
+    $username = "";
+    $mess = "";
+    $chat_mess = "";
+    
+
+    $(document).ready(function () {
+      $chat_text = "";
+        $.ajax({
+          type: 'GET',
+          url: 'chat',
+          data: '  ',
+          success: function(data){
+             $chat_mess = data.chat;
+            var i, len = $chat_mess.length;
+            for(i = 0; i < len; i++){
+              $date = $chat_mess[i].date;
+              $text = $chat_mess[i].mess.substring(1, $chat_mess[i].mess.length-1);
+              $user = $chat_mess[i].username.substring(1, $chat_mess[i].username.length-1);
+              $chat_text += $date
+                           + " " + $user
+                           + " " + text + " \n";
+            }
+            $('#chat').val($chat_text);
+          }
+        });
+      });
+  }
+    // $('#chatbox').hide();
+    
+    function submit1(){
+        $('#chatbox').show();
+        $username = $('#name').val();
+        alert("Hello "+$username);
+        $('#login').hide();
+    }
+
+    function send_data(){
+      $mess = $('#message').val();
+      $chat_text = "";
+      //$(document).ready(function () {
+        $.ajax({
+          type: 'POST',
+          url: '',
+          data: JSON.stringify({username:$username,mess:$mess}),
+          dataType: "json",
+          success: function(data){
+           // $('#chat').val('');
+            $chat_mess = data.chat;
+            var i, len = $chat_mess.length;
+            for(i = 0; i < len; i++){
+              $date = $chat_mess[i].date;
+              $text = $chat_mess[i].mess.substring(1, $chat_mess[i].mess.length-1);
+              $user = $chat_mess[i].username.substring(1, $chat_mess[i].username.length-1);
+              $chat_text += $date
+                           + "--" + $user
+                           + " : " + $text + " \n";
+            }
+            $('#chat').val($chat_text);
+            $('#message').val('');
+          }
+        });
+    //  });
+    }
+
+  </script>
+</head>
+
+
+<body onload="loading()">
+  <div id="container">
+    <div id="loginform">
+        <p>Please enter your name to continue:</p>
+        <label for="name">Name:</label>
+        <input type="text" name="name" id="name"/>
+        <button id="login" onclick="submit1()">Sign In</button>
+    </div>
+
+    <div id="chatbox" style='display:none'>
+
+      <div id="mess">
+
+        <textarea id="chat" readonly rows="30" cols="100"></textarea>
+        <p>Your message:</p>
+        <input type="text" name="message" id="message" />
+        <button onclick="send_data()"> SENNND</button>
+      </div>
+
+    </div>
+  </div>
+
+<!-- <div id="loginform">
+    <form action="index.html" method="post">
+        <p>Please enter your name to continue:</p>
+        <label for="name">Name:</label>
+        <input type="text" name="name" id="name" />
+        <input type="submit" name="enter" id="enter" value="Enter" onclick="submit1()" />
+    </form>
+  </div> -->
+
+
+
+</body>
+</html>

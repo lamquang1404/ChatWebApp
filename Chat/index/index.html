@@ -35,42 +35,45 @@
     $mess = "";
     $chat_mess = "";
     
-
-    $(document).ready(function () {
-      $chat_text = "";
+      setInterval(function(){
+        $chat_mess2 = "";
+        $chat_text = "";
         $.ajax({
-          type: 'GET',
-          url: 'chat',
-          data: '  ',
+          type: 'POST',
+          url: '',
+          data: '',
+          dataType: "json",
           success: function(data){
-             $chat_mess = data.chat;
-            var i, len = $chat_mess.length;
-            for(i = 0; i < len; i++){
-              $date = $chat_mess[i].date;
-              $text = $chat_mess[i].mess.substring(1, $chat_mess[i].mess.length-1);
-              $user = $chat_mess[i].username.substring(1, $chat_mess[i].username.length-1);
-              $chat_text += $date
-                           + " " + $user
-                           + " " + text + " \n";
-            }
-            $('#chat').val($chat_text);
+           $chat_mess2 = data.chat;
+           var i, len = $chat_mess2.length;
+           for(i = 0; i < len; i++){
+            $date = $chat_mess2[i].date;
+            $text = $chat_mess2[i].mess.substring(1, $chat_mess2[i].mess.length-1);
+            $user = $chat_mess2[i].username.substring(1, $chat_mess2[i].username.length-1);
+            $chat_text += $date
+                          + "--" + $user
+                          + " : " + $text + " \n";
           }
-        });
+          $('#chat').val($chat_text);
+        }
       });
+      }, 1000);
+      
   }
-    // $('#chatbox').hide();
+
     
-    function submit1(){
-        $('#chatbox').show();
-        $username = $('#name').val();
-        alert("Hello "+$username);
-        $('#login').hide();
-    }
+  function submit1(){
+    $('#chatbox').show();
+    $username = $('#name').val();
+    alert("Hello "+$username);
+    $('#login').hide();
+    $('#name')[0].disabled = true;
+  }
 
     function send_data(){
       $mess = $('#message').val();
       $chat_text = "";
-      //$(document).ready(function () {
+
         $.ajax({
           type: 'POST',
           url: '',
@@ -92,7 +95,6 @@
             $('#message').val('');
           }
         });
-    //  });
     }
 
   </script>
@@ -120,17 +122,6 @@
 
     </div>
   </div>
-
-<!-- <div id="loginform">
-    <form action="index.html" method="post">
-        <p>Please enter your name to continue:</p>
-        <label for="name">Name:</label>
-        <input type="text" name="name" id="name" />
-        <input type="submit" name="enter" id="enter" value="Enter" onclick="submit1()" />
-    </form>
-  </div> -->
-
-
 
 </body>
 </html>

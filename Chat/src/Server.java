@@ -18,14 +18,14 @@ public class Server {
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws IOException {
 		final int port = 6969;
-		//ExecutorService executorService = Executors.newFixedThreadPool(N_THREADS);
 		System.out.println("Server waiting for connection on port " + port);
 		ServerSocket serverSockets = new ServerSocket(port);
+		PrintWriter account_file = new PrintWriter("index/account.txt");
+		account_file.close();
 		SocketList.clear();
 		while (true) {
 			Socket clientSocket = null;
 			try {
-				
 				clientSocket = serverSockets.accept();
 				clientSocket.setSoTimeout(3000);
 				System.out.println("Recieved connection from " + clientSocket.getInetAddress() + " on port "
@@ -35,21 +35,11 @@ public class Server {
 				
 				for (Socket socket : SocketList) {
 					ReceiveFromClientThread receive_from_client = new ReceiveFromClientThread(socket);
-					// //Thread receive_thread = new Thread(receive_from_client);
 					receive_from_client.start();
 				}
-				
-				// }
-
-				// send_client.run(clientSocket);
-
 			} catch (Exception e) {
-				// TODO: handle exception
 				System.out.println("closed socket from server\n");
 			}
-			// for (Socket socket : SocketList) {
-
-			// clientSocket.close();
 		}
 	}
 }
@@ -60,7 +50,7 @@ class ReceiveFromClientThread extends Thread {
 	StringBuilder mess_build = null;
 	public ReceiveFromClientThread(Socket clientSocket) {
 		this.clientSocket = clientSocket;
-	}// end constructor
+	}
 
 	public void run() {
 		try {
@@ -71,6 +61,8 @@ class ReceiveFromClientThread extends Thread {
 				String request = brBufferedReader.readLine();
 				if (request == null || request.length() == 0) {
 					mess_build = new StringBuilder();
+					if (length == 0 && Server.LogChat.length() > 0)
+						SendMessToClient(clientSocket);
 					for (int i = 0; i < length; i++) {
 						mess_build.append((char) brBufferedReader.read());
 					}
@@ -92,16 +84,6 @@ class ReceiveFromClientThread extends Thread {
 					if (path.trim().equals("/")) {
 						sendFileIndex(clientSocket);
 					}
-					else if (path.trim().equals("/chat?")){
-						System.out.println("chat length : " + Server.chat_length);
-						if (mess_build.toString().length() > 1 && Server.chat_length > 0){
-							for (Socket socket : Server.SocketList) {
-								SendMessToClient(socket, mess_build.toString());
-							}
-							Server.chat_length = mess_build.toString().length();
-							System.out.println("chat length : " + Server.chat_length);
-						}
-					}
 
 				} else if (request.startsWith("POST /")) {
 					System.out.println("post section : " + request + "@");
@@ -109,35 +91,27 @@ class ReceiveFromClientThread extends Thread {
 				} else if (request.startsWith("Content-Length:")) {
 					length = Integer.parseInt(request.substring(15, request.length()).trim());
 					System.out.println("content-length : " + length);
-//				} else if (request.startsWith("{") && request.endsWith("}")) {
-//					System.out.println("mess section :" + request);
-//					String mess = request.substring(1, request.indexOf("}"));
-////					for (Socket socket : Server.SocketList) {
-////						SendMessToClient(socket, mess);
-////					}
-					
 				}
 
-				System.out.println("From Client: " + request);// print
+				System.out.println("From Client: " + request);// print request
 			}
-
 		}
 
 		catch (Exception ex) {
-			Server.SocketList.remove(clientSocket);
 			System.out.println("Closed socket from client: " +ex.getMessage());
 		}
 		finally {
-			//clientSocket.shutdownInput();
-			//clientSocket.shutdownOutput();
-			//clientSocket.close();
-			Server.SocketList.remove(clientSocket);
+			try {
+				clientSocket.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			if (Server.SocketList.contains(clientSocket)) Server.SocketList.remove(clientSocket);
 		}
 	}
 
 	public void sendFileIndex(Socket socket) {
 		try {
-			// SendFileIndex();
 			String path = "index/index.html";
 			InputStream file_in = new FileInputStream(path);
 			OutputStream file_out = socket.getOutputStream();
@@ -146,10 +120,9 @@ class ReceiveFromClientThread extends Thread {
 			FileTransfert(file_in, file_out);
 			print_file_out.flush();
 			file_out.flush();
-			//file_out.close();
-			//Server.SocketList.remove(socket);
-			socket.shutdownOutput();
-			//file_in.close();
+			file_out.close();
+			if (Server.SocketList.contains(socket)) Server.SocketList.remove(socket);
+			file_in.close();
 		} catch (Exception e) {
 			// TODO: handle exception
 			System.out.println("Please enter something to send back to client..");
@@ -187,9 +160,6 @@ class ReceiveFromClientThread extends Thread {
 			mess_chat.put("mess", message);
 			mess_chat.put("date", to_date);
 			
-			//JSONArray array = new JSONArray();
-			//array.put(mess_chat);
-			
 			Server.LogChat.append("chat", mess_chat);
 			System.out.println("message is: " + Server.SocketList.size() + "\n" +Server.LogChat);
 			OutputStream mess_out = socket.getOutputStream();
@@ -198,13 +168,30 @@ class ReceiveFromClientThread extends Thread {
 			print_mess_out.print(Server.LogChat);
 			print_mess_out.flush();
 			mess_out.flush();
-			socket.shutdownOutput();
-			//socket.close();
-			//Server.SocketList.remove(socket);
+			print_mess_out.close();
+			mess_out.close();
+			if (Server.SocketList.contains(socket)) Server.SocketList.remove(socket);
 		} catch (Exception e) {
-			// TODO: handle exception
-			System.out.println("closed socket from send data\n");
-			Server.SocketList.remove(socket);
+			System.out.println("closed socket from send data" + mess +"\n" + e.getMessage());
+		}
+
+	}
+	
+	public void SendMessToClient(Socket socket) {
+
+		try {
+			System.out.println("message is: " + Server.SocketList.size() + "\n" +Server.LogChat);
+			OutputStream mess_out = socket.getOutputStream();
+			PrintStream print_mess_out = new PrintStream(mess_out);
+			print_mess_out.print("HTTP/1.1 200 OK\r\n" + "Content-Type: text/plain\r\n" + "Date: " + new Date() + "\r\n\r\n");
+			print_mess_out.print(Server.LogChat);
+			print_mess_out.flush();
+			mess_out.flush();
+			print_mess_out.close();
+			mess_out.close();
+			if (Server.SocketList.contains(socket)) Server.SocketList.remove(socket);
+		} catch (Exception e) {
+			System.out.println("closed socket from send data\n" + e.getMessage());
 		}
 
 	}
@@ -219,7 +206,6 @@ class ReceiveFromClientThread extends Thread {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.println("closed socket from send index\n");
 		}
 	}
 }

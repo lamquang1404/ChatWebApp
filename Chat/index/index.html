@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <title></title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
   <style type="text/css">
     body {
       background: #c8c5eb;
@@ -40,10 +41,12 @@
         $chat_text = "";
         $.ajax({
           type: 'POST',
-          url: '',
+          url: 'http://171.249.75.248:6969/',
+          contentType: "application/json; charset=utf-8",
           data: '',
           dataType: "json",
           success: function(data){
+           // $font = JSON.parse(data);
            $chat_mess2 = data.chat;
            var i, len = $chat_mess2.length;
            for(i = 0; i < len; i++){
@@ -76,11 +79,13 @@
 
         $.ajax({
           type: 'POST',
-          url: '',
+          url: 'http://171.249.75.248:6969/',
+          contentType: "application/json; charset=utf-8",
           data: JSON.stringify({username:$username,mess:$mess}),
           dataType: "json",
           success: function(data){
            // $('#chat').val('');
+           //$font = JSON.parse(data);
             $chat_mess = data.chat;
             var i, len = $chat_mess.length;
             for(i = 0; i < len; i++){
